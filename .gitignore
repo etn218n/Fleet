@@ -1,0 +1,12 @@
+
+node_modules/
+.parcel-cache/
+
+# Rider cache directory
+.idea/
+
+# Visual Studio cache directory
+.vs/
+
+# Visual Code cache directory
+.vscode/
