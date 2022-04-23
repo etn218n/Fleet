@@ -125,48 +125,48 @@ class Keyboard {
         this.KeyboardStates["Tab"]   = new ButtonState(this.KeyHoldThreshold);
     }
 
-    public get alpha0() { return this.KeyboardStates["0"]; }
-    public get alpha1() { return this.KeyboardStates["1"]; }
-    public get alpha2() { return this.KeyboardStates["2"]; }
-    public get alpha3() { return this.KeyboardStates["3"]; }
-    public get alpha4() { return this.KeyboardStates["4"]; }
-    public get alpha5() { return this.KeyboardStates["5"]; }
-    public get alpha6() { return this.KeyboardStates["6"]; }
-    public get alpha7() { return this.KeyboardStates["7"]; }
-    public get alpha8() { return this.KeyboardStates["8"]; }
-    public get alpha9() { return this.KeyboardStates["9"]; }
+    get alpha0() { return this.KeyboardStates["0"]; }
+    get alpha1() { return this.KeyboardStates["1"]; }
+    get alpha2() { return this.KeyboardStates["2"]; }
+    get alpha3() { return this.KeyboardStates["3"]; }
+    get alpha4() { return this.KeyboardStates["4"]; }
+    get alpha5() { return this.KeyboardStates["5"]; }
+    get alpha6() { return this.KeyboardStates["6"]; }
+    get alpha7() { return this.KeyboardStates["7"]; }
+    get alpha8() { return this.KeyboardStates["8"]; }
+    get alpha9() { return this.KeyboardStates["9"]; }
 
-    public get a() { return this.KeyboardStates["a"]; }
-	public get b() { return this.KeyboardStates["b"]; }
-	public get c() { return this.KeyboardStates["c"]; }
-	public get d() { return this.KeyboardStates["d"]; }
-	public get e() { return this.KeyboardStates["e"]; }
-	public get f() { return this.KeyboardStates["f"]; }
-	public get g() { return this.KeyboardStates["j"]; }
-	public get h() { return this.KeyboardStates["f"]; }
-	public get i() { return this.KeyboardStates["i"]; }
-	public get j() { return this.KeyboardStates["j"]; }
-	public get k() { return this.KeyboardStates["k"]; }
-	public get l() { return this.KeyboardStates["l"]; }
-	public get m() { return this.KeyboardStates["m"]; }
-	public get n() { return this.KeyboardStates["n"]; }
-	public get o() { return this.KeyboardStates["o"]; }
-	public get p() { return this.KeyboardStates["p"]; }
-	public get q() { return this.KeyboardStates["q"]; }
-	public get r() { return this.KeyboardStates["r"]; }
-	public get s() { return this.KeyboardStates["s"]; }
-	public get t() { return this.KeyboardStates["t"]; }
-	public get u() { return this.KeyboardStates["u"]; }
-	public get v() { return this.KeyboardStates["v"]; }
-	public get w() { return this.KeyboardStates["w"]; }
-	public get x() { return this.KeyboardStates["x"]; }
-	public get y() { return this.KeyboardStates["y"]; }
-	public get z() { return this.KeyboardStates["z"]; }
+    get a() { return this.KeyboardStates["a"]; }
+    get b() { return this.KeyboardStates["b"]; }
+    get c() { return this.KeyboardStates["c"]; }
+    get d() { return this.KeyboardStates["d"]; }
+    get e() { return this.KeyboardStates["e"]; }
+    get f() { return this.KeyboardStates["f"]; }
+    get g() { return this.KeyboardStates["j"]; }
+    get h() { return this.KeyboardStates["f"]; }
+    get i() { return this.KeyboardStates["i"]; }
+    get j() { return this.KeyboardStates["j"]; }
+    get k() { return this.KeyboardStates["k"]; }
+    get l() { return this.KeyboardStates["l"]; }
+    get m() { return this.KeyboardStates["m"]; }
+    get n() { return this.KeyboardStates["n"]; }
+    get o() { return this.KeyboardStates["o"]; }
+    get p() { return this.KeyboardStates["p"]; }
+    get q() { return this.KeyboardStates["q"]; }
+    get r() { return this.KeyboardStates["r"]; }
+    get s() { return this.KeyboardStates["s"]; }
+    get t() { return this.KeyboardStates["t"]; }
+    get u() { return this.KeyboardStates["u"]; }
+    get v() { return this.KeyboardStates["v"]; }
+    get w() { return this.KeyboardStates["w"]; }
+    get x() { return this.KeyboardStates["x"]; }
+    get y() { return this.KeyboardStates["y"]; }
+    get z() { return this.KeyboardStates["z"]; }
 
-	public get enter() { return this.KeyboardStates["Enter"]; }
-    public get shift() { return this.KeyboardStates["Shift"]; }
-	public get space() { return this.KeyboardStates[" "];     }
-	public get tab()   { return this.KeyboardStates["Tab"];   }
+    get enter() { return this.KeyboardStates["Enter"]; }
+    get shift() { return this.KeyboardStates["Shift"]; }
+    get space() { return this.KeyboardStates[" "];     }
+    get tab()   { return this.KeyboardStates["Tab"];   }
 }
 
 export { Keyboard };
