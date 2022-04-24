@@ -37,6 +37,8 @@ class Engine {
 
         Input.update();
         this.updateCurrentScene();
+        this.lateUpdateCurrentScene();
+        this.beforeRenderCurrentScene();
         this.renderCurrentScene();
 
         requestAnimationFrame(() => this.update()); 
@@ -70,7 +72,7 @@ class Engine {
             entity.update();
     }
 
-    private lateUpdateActiveScene() {
+    private lateUpdateCurrentScene() {
         for (const entity of this.CurrentScene.activeEntities)
             entity.lateUpdate();
     }
@@ -78,6 +80,11 @@ class Engine {
     private fixedUpdateActiveScene() {
         for (const entity of this.CurrentScene.activeEntities)
             entity.fixedUpdate();
+    }
+
+    private beforeRenderCurrentScene() {
+        for (const entity of this.CurrentScene.activeEntities)
+            entity.beforeRender();
     }
 
     private measureDeltaTime() {

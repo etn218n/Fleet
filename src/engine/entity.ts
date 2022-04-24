@@ -1,12 +1,14 @@
 import { Component } from "./component";
-import { Vector3, Quaternion } from "three";
+import { Transform } from "./transform";
 
 type Constructor<T> = new (...args: any[]) => T;
 
 class Entity {
     private Parent:Entity;
-    private Position:Vector3 = new Vector3(0, 0, 0);
+    private Transform:Transform = new Transform();
     private Components:Component[] = [];
+
+    get transform() { return this.Transform; }
 
     public start() {
         for (const component of this.Components)
@@ -28,9 +30,20 @@ class Entity {
             component.onFixedUpdate();
     }
 
+    public beforeRender() {
+        for (const component of this.Components)
+            component.onBeforeRender();
+    }
+
     public addComponent(component : Component) {
-        if (!this.Components.includes(component))
-            this.Components.push(component);
+        if (component.hasOwner)
+            return;
+
+        if (this.Components.includes(component))
+            return;
+
+        this.Components.push(component);
+        component.setOwnerEntity(this);
     }
 
     public removeComponent(component : Component) {

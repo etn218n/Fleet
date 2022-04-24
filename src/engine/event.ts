@@ -1,5 +1,7 @@
+type Subscriber = (...args : any[]) => void; 
+
 class Event {
-    private Subscribers:Subscriber[] = [];
+    private Subscribers:Subscriber[]  = [];
 
     public subscribe(subscriber : Subscriber) {
         if (!this.Subscribers.includes(subscriber))
@@ -12,14 +14,10 @@ class Event {
             this.Subscribers.splice(index);
     }
 
-    public notify(arg? : any) {
+    public notify(...args : any[]) {
         for (const subscriber of this.Subscribers)
-            subscriber.onNotified(arg);
+            subscriber(args);
     }
-}
-
-interface Subscriber {
-    onNotified(arg? : any);
 }
 
 export { Event, Subscriber };

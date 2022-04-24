@@ -6,6 +6,16 @@ class Camera extends Component {
     protected Implementation:ThreeCamera;
 
     get implementation() { return this.Implementation; }
+
+    public onBeforeRender() {
+        this.Implementation.position.set(this.transform.position.x, 
+                                         this.transform.position.y, 
+                                         this.transform.position.z);
+
+        this.Implementation.rotation.set(this.transform.eulerAngles.x, 
+                                         this.transform.eulerAngles.y, 
+                                         this.transform.eulerAngles.z);
+    }
 }
 
 class PerspectiveCamera extends Camera {

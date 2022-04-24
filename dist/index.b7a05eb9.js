@@ -515,649 +515,29 @@ function hmrAcceptRun(bundle, id) {
 
 },{}],"jeorp":[function(require,module,exports) {
 var _three = require("three");
-var _engine = require("./engine/engine");
-var _scene = require("./engine/scene");
-var _entity = require("./engine/entity");
-var _camera = require("./engine/camera");
-var _meshRenderer = require("./engine/meshRenderer");
-const engine = new _engine.Engine();
-const scene = new _scene.Scene();
-const entity = new _entity.Entity();
-const camera = new _camera.PerspectiveCamera(45, 1, 1, 1000);
-camera.implementation.position.z = 5;
-const meshRenderer = new _meshRenderer.MeshRenderer();
+var _nol = require("./nol");
+var _motor = require("./motor");
+const engine = new _nol.Engine();
+const scene = new _nol.Scene();
+const camera = new _nol.Entity();
+const cube = new _nol.Entity();
+const motor = new _motor.Motor();
+const meshRenderer = new _nol.MeshRenderer();
 meshRenderer.geometry = new _three.BoxGeometry();
 meshRenderer.material = new _three.MeshBasicMaterial({
     color: 65280
 });
 meshRenderer.mesh = new _three.Mesh(meshRenderer.geometry, meshRenderer.material);
-entity.addComponent(meshRenderer);
-entity.addComponent(camera);
-scene.add(entity);
+cube.addComponent(meshRenderer);
+cube.addComponent(motor);
+camera.addComponent(new _nol.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000));
+scene.add(camera);
+scene.add(cube);
+camera.transform.position = new _nol.Vector3(0, 0, 10);
 engine.createRenderCanvas(window.innerWidth, window.innerHeight);
 engine.loadScene(scene);
 
-},{"./engine/engine":"4nEq3","./engine/scene":"3QJAW","./engine/entity":"14jp3","./engine/meshRenderer":"4uxNV","three":"ktPTu","./engine/camera":"hnBv0"}],"4nEq3":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Engine", ()=>Engine
-);
-var _input = require("./input");
-var _renderer = require("./renderer");
-class Engine {
-    FixedLag = 0;
-    FrameRate = 0;
-    FrameCount = 0;
-    DeltaTime = 0;
-    FixedDeltaTime = 0;
-    FixedFrameRate = 50;
-    LastFrameTimeStamp = 0;
-    FrameCountInOneSecond = 0;
-    AccumulatedTimeInOneSecond = 0;
-    get frameRate() {
-        return this.FrameRate;
-    }
-    get frameCount() {
-        return this.FrameCount;
-    }
-    createRenderCanvas(width, height) {
-        this.Renderer = new _renderer.Renderer(width, height);
-    }
-    update() {
-        this.measureDeltaTime();
-        this.measureAverageFPS();
-        this.FixedLag += this.DeltaTime;
-        this.FixedDeltaTime = 1000 / this.FixedFrameRate;
-        while(this.FixedLag >= this.FixedDeltaTime){
-            this.FixedLag -= this.FixedDeltaTime;
-            this.fixedUpdateActiveScene();
-        }
-        _input.update();
-        this.updateCurrentScene();
-        this.renderCurrentScene();
-        requestAnimationFrame(()=>this.update()
-        );
-    }
-    loadScene(scene) {
-        if (scene === undefined) return;
-        if (scene.mainCamera === undefined) {
-            console.log("Main camera not set.");
-            return;
-        }
-        this.CurrentScene = scene;
-        this.startCurrentScene();
-        this.update();
-    }
-    renderCurrentScene() {
-        this.Renderer.render(this.CurrentScene);
-    }
-    startCurrentScene() {
-        for (const entity of this.CurrentScene.activeEntities)entity.start();
-    }
-    updateCurrentScene() {
-        for (const entity of this.CurrentScene.activeEntities)entity.update();
-    }
-    lateUpdateActiveScene() {
-        for (const entity of this.CurrentScene.activeEntities)entity.lateUpdate();
-    }
-    fixedUpdateActiveScene() {
-        for (const entity of this.CurrentScene.activeEntities)entity.fixedUpdate();
-    }
-    measureDeltaTime() {
-        let now = performance.now();
-        this.FrameCount += 1;
-        this.DeltaTime = now - this.LastFrameTimeStamp;
-        this.LastFrameTimeStamp = now;
-    }
-    measureAverageFPS() {
-        this.FrameCountInOneSecond += 1;
-        this.AccumulatedTimeInOneSecond += this.DeltaTime;
-        if (this.AccumulatedTimeInOneSecond >= 1000) {
-            this.AccumulatedTimeInOneSecond -= 1000;
-            this.FrameRate = this.FrameCountInOneSecond;
-            this.FrameCountInOneSecond = 0;
-        }
-    }
-}
-
-},{"./input":"c9Xk6","./renderer":"lxmET","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"c9Xk6":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "update", ()=>update
-);
-parcelHelpers.export(exports, "mouse", ()=>mouse
-);
-parcelHelpers.export(exports, "keyboard", ()=>keyboard
-);
-var _mouse = require("./mouse");
-var _keyboard = require("./keyboard");
-const mouse = new _mouse.Mouse();
-const keyboard = new _keyboard.Keyboard();
-function update() {
-    mouse.update();
-    keyboard.update();
-}
-
-},{"./mouse":"9P4L9","./keyboard":"iR415","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"9P4L9":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Mouse", ()=>Mouse
-);
-var _event = require("./event");
-var _buttonState = require("./buttonState");
-class Mouse {
-    UpdatedButtons = [];
-    MouseStates = [];
-    ButtonHoldThreshold = 200;
-    OnButtonDown = new _event.Event();
-    OnButtonHold = new _event.Event();
-    OnButtonPressed = new _event.Event();
-    OnButtonReleased = new _event.Event();
-    get left() {
-        return this.MouseStates[0];
-    }
-    get middle() {
-        return this.MouseStates[1];
-    }
-    get right() {
-        return this.MouseStates[2];
-    }
-    get extra1() {
-        return this.MouseStates[3];
-    }
-    get extra2() {
-        return this.MouseStates[4];
-    }
-    get screenX() {
-        return this.ScreenX;
-    }
-    get screenY() {
-        return this.ScreenY;
-    }
-    get positionX() {
-        return this.PositionX;
-    }
-    get positionY() {
-        return this.PositionY;
-    }
-    get movementX() {
-        return this.MovementX;
-    }
-    get movementY() {
-        return this.MovementY;
-    }
-    get wheelDelta() {
-        return this.WheelDelta;
-    }
-    get onButtonDown() {
-        return this.OnButtonDown;
-    }
-    get onButtonHold() {
-        return this.OnButtonHold;
-    }
-    get onButtonPressed() {
-        return this.OnButtonPressed;
-    }
-    get onButtonReleased() {
-        return this.OnButtonReleased;
-    }
-    constructor(){
-        this.initializeEvents();
-        this.initializeKeyboardStates();
-    }
-    update() {
-        for(let i = this.UpdatedButtons.length - 1; i >= 0; i--){
-            let button = this.UpdatedButtons[i];
-            let buttonState = this.MouseStates[button];
-            buttonState.update();
-            if (buttonState.isDown) this.onButtonDown.notify();
-            if (buttonState.isPressed) this.onButtonDown.notify();
-            if (buttonState.isHold) this.onButtonHold.notify(buttonState.holdDuration);
-            if (buttonState.isReleased) this.onButtonReleased.notify();
-            if (buttonState.isDone) this.UpdatedButtons.splice(i, 1);
-        }
-    }
-    initializeEvents() {
-        window.addEventListener("mousedown", (e)=>{
-            this.MouseStates[e.button].setButtonDown();
-            if (!this.UpdatedButtons.includes(e.button)) this.UpdatedButtons.push(e.button);
-        });
-        window.addEventListener("mouseup", (e)=>{
-            this.MouseStates[e.button].setButtonUp();
-        });
-        window.addEventListener("mousemove", (e)=>{
-            this.ScreenX = e.screenX;
-            this.ScreenY = e.screenY;
-            this.PositionX = e.offsetX;
-            this.PositionY = e.offsetY;
-            this.MovementX = e.movementX;
-            this.MovementY = e.movementY;
-        });
-        window.addEventListener("wheel", (e)=>{
-            this.WheelDelta = e.deltaY;
-        });
-    }
-    initializeKeyboardStates() {
-        this.MouseStates[0] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
-        this.MouseStates[1] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
-        this.MouseStates[2] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
-        this.MouseStates[3] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
-        this.MouseStates[4] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
-    }
-}
-
-},{"./event":"8tV3S","./buttonState":"j9Svq","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"8tV3S":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Event", ()=>Event
-);
-class Event {
-    Subscribers = [];
-    subscribe(subscriber) {
-        if (!this.Subscribers.includes(subscriber)) this.Subscribers.push(subscriber);
-    }
-    unsubscribe(subscriber) {
-        let index = this.Subscribers.indexOf(subscriber);
-        if (index !== -1) this.Subscribers.splice(index);
-    }
-    notify(arg) {
-        for (const subscriber of this.Subscribers)subscriber.onNotified(arg);
-    }
-}
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"5a0mW":[function(require,module,exports) {
-exports.interopDefault = function(a) {
-    return a && a.__esModule ? a : {
-        default: a
-    };
-};
-exports.defineInteropFlag = function(a) {
-    Object.defineProperty(a, '__esModule', {
-        value: true
-    });
-};
-exports.exportAll = function(source, dest) {
-    Object.keys(source).forEach(function(key) {
-        if (key === 'default' || key === '__esModule' || dest.hasOwnProperty(key)) return;
-        Object.defineProperty(dest, key, {
-            enumerable: true,
-            get: function() {
-                return source[key];
-            }
-        });
-    });
-    return dest;
-};
-exports.export = function(dest, destName, get) {
-    Object.defineProperty(dest, destName, {
-        enumerable: true,
-        get: get
-    });
-};
-
-},{}],"j9Svq":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "ButtonState", ()=>ButtonState
-);
-var _event = require("./event");
-class ButtonState {
-    IsUp = true;
-    IsDown = false;
-    IsHold = false;
-    IsPressed = false;
-    IsReleased = false;
-    IsDone = false;
-    PressFlag = false;
-    ReleaseFlag = false;
-    HoldDuration = 0;
-    ButtonHoldThreshold = 0;
-    ButtonDownTimeStamp = 0;
-    OnDown = new _event.Event();
-    OnHold = new _event.Event();
-    OnPressed = new _event.Event();
-    OnReleased = new _event.Event();
-    get isUp() {
-        return this.IsUp;
-    }
-    get isDown() {
-        return this.IsDown;
-    }
-    get isHold() {
-        return this.IsHold;
-    }
-    get isPressed() {
-        return this.IsPressed;
-    }
-    get isReleased() {
-        return this.IsReleased;
-    }
-    get isDone() {
-        return this.IsDone;
-    }
-    get holdDuration() {
-        return this.HoldDuration;
-    }
-    get onDown() {
-        return this.OnDown;
-    }
-    get onHold() {
-        return this.OnHold;
-    }
-    get onPressed() {
-        return this.OnPressed;
-    }
-    get onReleased() {
-        return this.OnReleased;
-    }
-    constructor(buttonHoldThreshold){
-        this.ButtonHoldThreshold = buttonHoldThreshold;
-    }
-    setButtonDown() {
-        if (this.IsDown) return;
-        this.IsUp = false;
-        this.IsDown = true;
-        this.IsDone = false;
-        this.PressFlag = true;
-        this.ButtonDownTimeStamp = performance.now();
-    }
-    setButtonUp() {
-        this.IsUp = true;
-        this.IsDown = false;
-        this.ReleaseFlag = true;
-    }
-    update() {
-        if (this.IsDown) {
-            this.handleButtonPress();
-            this.handleButtonHold();
-            this.OnDown.notify();
-        } else this.handleButtonRelease();
-    }
-    handleButtonPress() {
-        if (this.PressFlag === true) {
-            this.IsPressed = true;
-            this.PressFlag = false;
-            this.OnPressed.notify();
-        } else this.IsPressed = false;
-    }
-    handleButtonHold() {
-        let buttonDownTime = performance.now() - this.ButtonDownTimeStamp;
-        if (buttonDownTime > this.ButtonHoldThreshold) {
-            this.IsHold = true;
-            this.HoldDuration = buttonDownTime - this.ButtonHoldThreshold;
-            this.OnHold.notify(this.HoldDuration);
-        }
-    }
-    handleButtonRelease() {
-        if (this.ReleaseFlag === true) {
-            this.IsReleased = true;
-            this.ReleaseFlag = false;
-            this.OnReleased.notify();
-        } else {
-            this.IsDone = true;
-            this.IsReleased = false;
-            this.IsHold = false;
-            this.HoldDuration = 0;
-        }
-    }
-}
-
-},{"./event":"8tV3S","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"iR415":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Keyboard", ()=>Keyboard
-);
-var _event = require("./event");
-var _buttonState = require("./buttonState");
-class Keyboard {
-    UpdatedKeys = [];
-    KeyboardStates = [];
-    KeyHoldThreshold = 200;
-    OnKeyDown = new _event.Event();
-    OnKeyHold = new _event.Event();
-    OnKeyPressed = new _event.Event();
-    OnKeyReleased = new _event.Event();
-    get onKeyDown() {
-        return this.OnKeyDown;
-    }
-    get onKeyHold() {
-        return this.OnKeyHold;
-    }
-    get onKeyPressed() {
-        return this.OnKeyPressed;
-    }
-    get onKeyReleased() {
-        return this.OnKeyReleased;
-    }
-    constructor(){
-        this.initializeEvents();
-        this.initializeKeyboardStates();
-    }
-    update() {
-        for(let i = this.UpdatedKeys.length - 1; i >= 0; i--){
-            let key = this.UpdatedKeys[i];
-            let keyState = this.KeyboardStates[key];
-            keyState.update();
-            if (keyState.isDown) this.OnKeyDown.notify();
-            if (keyState.isPressed) this.OnKeyPressed.notify();
-            if (keyState.isHold) this.OnKeyHold.notify(keyState.holdDuration);
-            if (keyState.isReleased) this.OnKeyReleased.notify();
-            if (keyState.isDone) this.UpdatedKeys.splice(i, 1);
-        }
-    }
-    initializeEvents() {
-        window.addEventListener("keydown", (e)=>{
-            this.KeyboardStates[e.key].setButtonDown();
-            if (!this.UpdatedKeys.includes(e.key)) this.UpdatedKeys.push(e.key);
-        });
-        window.addEventListener("keyup", (e)=>{
-            this.KeyboardStates[e.key].setButtonUp();
-        });
-    }
-    initializeKeyboardStates() {
-        this.KeyboardStates["0"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["1"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["2"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["3"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["4"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["5"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["6"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["7"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["8"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["9"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["a"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["b"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["c"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["d"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["e"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["f"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["g"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["h"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["i"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["j"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["k"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["l"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["m"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["n"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["o"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["p"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["q"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["r"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["s"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["t"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["u"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["v"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["w"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["x"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["y"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["z"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["["] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["]"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates[":"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates[";"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["'"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["/"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates[","] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["."] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["\\"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F1"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F2"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F3"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F4"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F5"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F6"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F7"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F8"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F9"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F10"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F11"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["F12"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["Enter"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["Shift"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates[" "] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-        this.KeyboardStates["Tab"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
-    }
-    get alpha0() {
-        return this.KeyboardStates["0"];
-    }
-    get alpha1() {
-        return this.KeyboardStates["1"];
-    }
-    get alpha2() {
-        return this.KeyboardStates["2"];
-    }
-    get alpha3() {
-        return this.KeyboardStates["3"];
-    }
-    get alpha4() {
-        return this.KeyboardStates["4"];
-    }
-    get alpha5() {
-        return this.KeyboardStates["5"];
-    }
-    get alpha6() {
-        return this.KeyboardStates["6"];
-    }
-    get alpha7() {
-        return this.KeyboardStates["7"];
-    }
-    get alpha8() {
-        return this.KeyboardStates["8"];
-    }
-    get alpha9() {
-        return this.KeyboardStates["9"];
-    }
-    get a() {
-        return this.KeyboardStates["a"];
-    }
-    get b() {
-        return this.KeyboardStates["b"];
-    }
-    get c() {
-        return this.KeyboardStates["c"];
-    }
-    get d() {
-        return this.KeyboardStates["d"];
-    }
-    get e() {
-        return this.KeyboardStates["e"];
-    }
-    get f() {
-        return this.KeyboardStates["f"];
-    }
-    get g() {
-        return this.KeyboardStates["j"];
-    }
-    get h() {
-        return this.KeyboardStates["f"];
-    }
-    get i() {
-        return this.KeyboardStates["i"];
-    }
-    get j() {
-        return this.KeyboardStates["j"];
-    }
-    get k() {
-        return this.KeyboardStates["k"];
-    }
-    get l() {
-        return this.KeyboardStates["l"];
-    }
-    get m() {
-        return this.KeyboardStates["m"];
-    }
-    get n() {
-        return this.KeyboardStates["n"];
-    }
-    get o() {
-        return this.KeyboardStates["o"];
-    }
-    get p() {
-        return this.KeyboardStates["p"];
-    }
-    get q() {
-        return this.KeyboardStates["q"];
-    }
-    get r() {
-        return this.KeyboardStates["r"];
-    }
-    get s() {
-        return this.KeyboardStates["s"];
-    }
-    get t() {
-        return this.KeyboardStates["t"];
-    }
-    get u() {
-        return this.KeyboardStates["u"];
-    }
-    get v() {
-        return this.KeyboardStates["v"];
-    }
-    get w() {
-        return this.KeyboardStates["w"];
-    }
-    get x() {
-        return this.KeyboardStates["x"];
-    }
-    get y() {
-        return this.KeyboardStates["y"];
-    }
-    get z() {
-        return this.KeyboardStates["z"];
-    }
-    get enter() {
-        return this.KeyboardStates["Enter"];
-    }
-    get shift() {
-        return this.KeyboardStates["Shift"];
-    }
-    get space() {
-        return this.KeyboardStates[" "];
-    }
-    get tab() {
-        return this.KeyboardStates["Tab"];
-    }
-}
-
-},{"./event":"8tV3S","./buttonState":"j9Svq","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"lxmET":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Renderer", ()=>Renderer
-);
-var _three = require("three");
-class Renderer {
-    constructor(canvasWidth, canvasHeight){
-        this.Renderer = new _three.WebGLRenderer();
-        this.Renderer.setSize(canvasWidth, canvasHeight);
-        document.body.appendChild(this.Renderer.domElement);
-    }
-    render(scene) {
-        if (scene === undefined) return;
-        this.Renderer.render(scene.renderScene, scene.mainCamera.implementation);
-    }
-}
-
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","./nol":"9Rn3t","./motor":"aXNIG"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ACESFilmicToneMapping", ()=>ACESFilmicToneMapping
@@ -30926,7 +30306,659 @@ if (typeof window !== 'undefined') {
     else window.__THREE__ = REVISION;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"3QJAW":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"5a0mW":[function(require,module,exports) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, '__esModule', {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === 'default' || key === '__esModule' || dest.hasOwnProperty(key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
+            }
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
+
+},{}],"9Rn3t":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Input", ()=>_input
+);
+parcelHelpers.export(exports, "Engine", ()=>_engine.Engine
+);
+parcelHelpers.export(exports, "Scene", ()=>_scene.Scene
+);
+parcelHelpers.export(exports, "Entity", ()=>_entity.Entity
+);
+parcelHelpers.export(exports, "PerspectiveCamera", ()=>_camera.PerspectiveCamera
+);
+parcelHelpers.export(exports, "MeshRenderer", ()=>_meshRenderer.MeshRenderer
+);
+parcelHelpers.export(exports, "Vector3", ()=>_three.Vector3
+);
+parcelHelpers.export(exports, "Quaternion", ()=>_three.Quaternion
+);
+var _input = require("./engine/input");
+var _engine = require("./engine/engine");
+var _scene = require("./engine/scene");
+var _entity = require("./engine/entity");
+var _camera = require("./engine/camera");
+var _meshRenderer = require("./engine/meshRenderer");
+var _three = require("three");
+
+},{"./engine/input":"c9Xk6","./engine/engine":"4nEq3","./engine/scene":"3QJAW","./engine/entity":"14jp3","./engine/camera":"hnBv0","./engine/meshRenderer":"4uxNV","three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"c9Xk6":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "update", ()=>update
+);
+parcelHelpers.export(exports, "mouse", ()=>mouse
+);
+parcelHelpers.export(exports, "keyboard", ()=>keyboard
+);
+var _mouse = require("./mouse");
+var _keyboard = require("./keyboard");
+const mouse = new _mouse.Mouse();
+const keyboard = new _keyboard.Keyboard();
+function update() {
+    mouse.update();
+    keyboard.update();
+}
+
+},{"./mouse":"9P4L9","./keyboard":"iR415","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"9P4L9":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Mouse", ()=>Mouse
+);
+var _event = require("./event");
+var _buttonState = require("./buttonState");
+class Mouse {
+    UpdatedButtons = [];
+    MouseStates = [];
+    ButtonHoldThreshold = 200;
+    OnButtonDown = new _event.Event();
+    OnButtonHold = new _event.Event();
+    OnButtonPressed = new _event.Event();
+    OnButtonReleased = new _event.Event();
+    get left() {
+        return this.MouseStates[0];
+    }
+    get middle() {
+        return this.MouseStates[1];
+    }
+    get right() {
+        return this.MouseStates[2];
+    }
+    get extra1() {
+        return this.MouseStates[3];
+    }
+    get extra2() {
+        return this.MouseStates[4];
+    }
+    get screenX() {
+        return this.ScreenX;
+    }
+    get screenY() {
+        return this.ScreenY;
+    }
+    get positionX() {
+        return this.PositionX;
+    }
+    get positionY() {
+        return this.PositionY;
+    }
+    get movementX() {
+        return this.MovementX;
+    }
+    get movementY() {
+        return this.MovementY;
+    }
+    get wheelDelta() {
+        return this.WheelDelta;
+    }
+    get onButtonDown() {
+        return this.OnButtonDown;
+    }
+    get onButtonHold() {
+        return this.OnButtonHold;
+    }
+    get onButtonPressed() {
+        return this.OnButtonPressed;
+    }
+    get onButtonReleased() {
+        return this.OnButtonReleased;
+    }
+    constructor(){
+        this.initializeEvents();
+        this.initializeKeyboardStates();
+    }
+    update() {
+        for(let i = this.UpdatedButtons.length - 1; i >= 0; i--){
+            let button = this.UpdatedButtons[i];
+            let buttonState = this.MouseStates[button];
+            buttonState.update();
+            if (buttonState.isDown) this.onButtonDown.notify();
+            if (buttonState.isPressed) this.onButtonDown.notify();
+            if (buttonState.isHold) this.onButtonHold.notify(buttonState.holdDuration);
+            if (buttonState.isReleased) this.onButtonReleased.notify();
+            if (buttonState.isDone) this.UpdatedButtons.splice(i, 1);
+        }
+    }
+    initializeEvents() {
+        window.addEventListener("mousedown", (e)=>{
+            this.MouseStates[e.button].setButtonDown();
+            if (!this.UpdatedButtons.includes(e.button)) this.UpdatedButtons.push(e.button);
+        });
+        window.addEventListener("mouseup", (e)=>{
+            this.MouseStates[e.button].setButtonUp();
+        });
+        window.addEventListener("mousemove", (e)=>{
+            this.ScreenX = e.screenX;
+            this.ScreenY = e.screenY;
+            this.PositionX = e.offsetX;
+            this.PositionY = e.offsetY;
+            this.MovementX = e.movementX;
+            this.MovementY = e.movementY;
+        });
+        window.addEventListener("wheel", (e)=>{
+            this.WheelDelta = e.deltaY;
+        });
+    }
+    initializeKeyboardStates() {
+        this.MouseStates[0] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
+        this.MouseStates[1] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
+        this.MouseStates[2] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
+        this.MouseStates[3] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
+        this.MouseStates[4] = new _buttonState.ButtonState(this.ButtonHoldThreshold);
+    }
+}
+
+},{"./event":"8tV3S","./buttonState":"j9Svq","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"8tV3S":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Event", ()=>Event
+);
+class Event {
+    Subscribers = [];
+    subscribe(subscriber) {
+        if (!this.Subscribers.includes(subscriber)) this.Subscribers.push(subscriber);
+    }
+    unsubscribe(subscriber) {
+        let index = this.Subscribers.indexOf(subscriber);
+        if (index !== -1) this.Subscribers.splice(index);
+    }
+    notify(...args) {
+        for (const subscriber of this.Subscribers)subscriber(args);
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"j9Svq":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "ButtonState", ()=>ButtonState
+);
+var _event = require("./event");
+class ButtonState {
+    IsUp = true;
+    IsDown = false;
+    IsHold = false;
+    IsPressed = false;
+    IsReleased = false;
+    IsDone = false;
+    PressFlag = false;
+    ReleaseFlag = false;
+    HoldDuration = 0;
+    ButtonHoldThreshold = 0;
+    ButtonDownTimeStamp = 0;
+    OnDown = new _event.Event();
+    OnHold = new _event.Event();
+    OnPressed = new _event.Event();
+    OnReleased = new _event.Event();
+    get isUp() {
+        return this.IsUp;
+    }
+    get isDown() {
+        return this.IsDown;
+    }
+    get isHold() {
+        return this.IsHold;
+    }
+    get isPressed() {
+        return this.IsPressed;
+    }
+    get isReleased() {
+        return this.IsReleased;
+    }
+    get isDone() {
+        return this.IsDone;
+    }
+    get holdDuration() {
+        return this.HoldDuration;
+    }
+    get onDown() {
+        return this.OnDown;
+    }
+    get onHold() {
+        return this.OnHold;
+    }
+    get onPressed() {
+        return this.OnPressed;
+    }
+    get onReleased() {
+        return this.OnReleased;
+    }
+    constructor(buttonHoldThreshold){
+        this.ButtonHoldThreshold = buttonHoldThreshold;
+    }
+    setButtonDown() {
+        if (this.IsDown) return;
+        this.IsUp = false;
+        this.IsDown = true;
+        this.IsDone = false;
+        this.PressFlag = true;
+        this.ButtonDownTimeStamp = performance.now();
+    }
+    setButtonUp() {
+        this.IsUp = true;
+        this.IsDown = false;
+        this.ReleaseFlag = true;
+    }
+    update() {
+        if (this.IsDown) {
+            this.handleButtonPress();
+            this.handleButtonHold();
+            this.OnDown.notify();
+        } else this.handleButtonRelease();
+    }
+    handleButtonPress() {
+        if (this.PressFlag === true) {
+            this.IsPressed = true;
+            this.PressFlag = false;
+            this.OnPressed.notify();
+        } else this.IsPressed = false;
+    }
+    handleButtonHold() {
+        let buttonDownTime = performance.now() - this.ButtonDownTimeStamp;
+        if (buttonDownTime > this.ButtonHoldThreshold) {
+            this.IsHold = true;
+            this.HoldDuration = buttonDownTime - this.ButtonHoldThreshold;
+            this.OnHold.notify(this.HoldDuration);
+        }
+    }
+    handleButtonRelease() {
+        if (this.ReleaseFlag === true) {
+            this.IsReleased = true;
+            this.ReleaseFlag = false;
+            this.OnReleased.notify();
+        } else {
+            this.IsDone = true;
+            this.IsReleased = false;
+            this.IsHold = false;
+            this.HoldDuration = 0;
+        }
+    }
+}
+
+},{"./event":"8tV3S","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"iR415":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Keyboard", ()=>Keyboard
+);
+var _event = require("./event");
+var _buttonState = require("./buttonState");
+class Keyboard {
+    UpdatedKeys = [];
+    KeyboardStates = [];
+    KeyHoldThreshold = 200;
+    OnKeyDown = new _event.Event();
+    OnKeyHold = new _event.Event();
+    OnKeyPressed = new _event.Event();
+    OnKeyReleased = new _event.Event();
+    get onKeyDown() {
+        return this.OnKeyDown;
+    }
+    get onKeyHold() {
+        return this.OnKeyHold;
+    }
+    get onKeyPressed() {
+        return this.OnKeyPressed;
+    }
+    get onKeyReleased() {
+        return this.OnKeyReleased;
+    }
+    constructor(){
+        this.initializeEvents();
+        this.initializeKeyboardStates();
+    }
+    update() {
+        for(let i = this.UpdatedKeys.length - 1; i >= 0; i--){
+            let key = this.UpdatedKeys[i];
+            let keyState = this.KeyboardStates[key];
+            keyState.update();
+            if (keyState.isDown) this.OnKeyDown.notify();
+            if (keyState.isPressed) this.OnKeyPressed.notify();
+            if (keyState.isHold) this.OnKeyHold.notify(keyState.holdDuration);
+            if (keyState.isReleased) this.OnKeyReleased.notify();
+            if (keyState.isDone) this.UpdatedKeys.splice(i, 1);
+        }
+    }
+    initializeEvents() {
+        window.addEventListener("keydown", (e)=>{
+            this.KeyboardStates[e.key].setButtonDown();
+            if (!this.UpdatedKeys.includes(e.key)) this.UpdatedKeys.push(e.key);
+        });
+        window.addEventListener("keyup", (e)=>{
+            this.KeyboardStates[e.key].setButtonUp();
+        });
+    }
+    initializeKeyboardStates() {
+        this.KeyboardStates["0"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["1"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["2"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["3"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["4"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["5"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["6"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["7"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["8"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["9"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["a"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["b"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["c"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["d"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["e"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["f"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["g"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["h"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["i"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["j"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["k"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["l"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["m"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["n"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["o"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["p"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["q"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["r"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["s"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["t"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["u"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["v"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["w"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["x"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["y"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["z"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["["] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["]"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates[":"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates[";"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["'"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["/"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates[","] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["."] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["\\"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F1"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F2"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F3"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F4"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F5"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F6"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F7"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F8"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F9"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F10"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F11"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["F12"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["Enter"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["Shift"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates[" "] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+        this.KeyboardStates["Tab"] = new _buttonState.ButtonState(this.KeyHoldThreshold);
+    }
+    get alpha0() {
+        return this.KeyboardStates["0"];
+    }
+    get alpha1() {
+        return this.KeyboardStates["1"];
+    }
+    get alpha2() {
+        return this.KeyboardStates["2"];
+    }
+    get alpha3() {
+        return this.KeyboardStates["3"];
+    }
+    get alpha4() {
+        return this.KeyboardStates["4"];
+    }
+    get alpha5() {
+        return this.KeyboardStates["5"];
+    }
+    get alpha6() {
+        return this.KeyboardStates["6"];
+    }
+    get alpha7() {
+        return this.KeyboardStates["7"];
+    }
+    get alpha8() {
+        return this.KeyboardStates["8"];
+    }
+    get alpha9() {
+        return this.KeyboardStates["9"];
+    }
+    get a() {
+        return this.KeyboardStates["a"];
+    }
+    get b() {
+        return this.KeyboardStates["b"];
+    }
+    get c() {
+        return this.KeyboardStates["c"];
+    }
+    get d() {
+        return this.KeyboardStates["d"];
+    }
+    get e() {
+        return this.KeyboardStates["e"];
+    }
+    get f() {
+        return this.KeyboardStates["f"];
+    }
+    get g() {
+        return this.KeyboardStates["j"];
+    }
+    get h() {
+        return this.KeyboardStates["f"];
+    }
+    get i() {
+        return this.KeyboardStates["i"];
+    }
+    get j() {
+        return this.KeyboardStates["j"];
+    }
+    get k() {
+        return this.KeyboardStates["k"];
+    }
+    get l() {
+        return this.KeyboardStates["l"];
+    }
+    get m() {
+        return this.KeyboardStates["m"];
+    }
+    get n() {
+        return this.KeyboardStates["n"];
+    }
+    get o() {
+        return this.KeyboardStates["o"];
+    }
+    get p() {
+        return this.KeyboardStates["p"];
+    }
+    get q() {
+        return this.KeyboardStates["q"];
+    }
+    get r() {
+        return this.KeyboardStates["r"];
+    }
+    get s() {
+        return this.KeyboardStates["s"];
+    }
+    get t() {
+        return this.KeyboardStates["t"];
+    }
+    get u() {
+        return this.KeyboardStates["u"];
+    }
+    get v() {
+        return this.KeyboardStates["v"];
+    }
+    get w() {
+        return this.KeyboardStates["w"];
+    }
+    get x() {
+        return this.KeyboardStates["x"];
+    }
+    get y() {
+        return this.KeyboardStates["y"];
+    }
+    get z() {
+        return this.KeyboardStates["z"];
+    }
+    get enter() {
+        return this.KeyboardStates["Enter"];
+    }
+    get shift() {
+        return this.KeyboardStates["Shift"];
+    }
+    get space() {
+        return this.KeyboardStates[" "];
+    }
+    get tab() {
+        return this.KeyboardStates["Tab"];
+    }
+}
+
+},{"./event":"8tV3S","./buttonState":"j9Svq","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"4nEq3":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Engine", ()=>Engine
+);
+var _input = require("./input");
+var _renderer = require("./renderer");
+class Engine {
+    FixedLag = 0;
+    FrameRate = 0;
+    FrameCount = 0;
+    DeltaTime = 0;
+    FixedDeltaTime = 0;
+    FixedFrameRate = 50;
+    LastFrameTimeStamp = 0;
+    FrameCountInOneSecond = 0;
+    AccumulatedTimeInOneSecond = 0;
+    get frameRate() {
+        return this.FrameRate;
+    }
+    get frameCount() {
+        return this.FrameCount;
+    }
+    createRenderCanvas(width, height) {
+        this.Renderer = new _renderer.Renderer(width, height);
+    }
+    update() {
+        this.measureDeltaTime();
+        this.measureAverageFPS();
+        this.FixedLag += this.DeltaTime;
+        this.FixedDeltaTime = 1000 / this.FixedFrameRate;
+        while(this.FixedLag >= this.FixedDeltaTime){
+            this.FixedLag -= this.FixedDeltaTime;
+            this.fixedUpdateActiveScene();
+        }
+        _input.update();
+        this.updateCurrentScene();
+        this.lateUpdateCurrentScene();
+        this.beforeRenderCurrentScene();
+        this.renderCurrentScene();
+        requestAnimationFrame(()=>this.update()
+        );
+    }
+    loadScene(scene) {
+        if (scene === undefined) return;
+        if (scene.mainCamera === undefined) {
+            console.log("Main camera not set.");
+            return;
+        }
+        this.CurrentScene = scene;
+        this.startCurrentScene();
+        this.update();
+    }
+    renderCurrentScene() {
+        this.Renderer.render(this.CurrentScene);
+    }
+    startCurrentScene() {
+        for (const entity of this.CurrentScene.activeEntities)entity.start();
+    }
+    updateCurrentScene() {
+        for (const entity of this.CurrentScene.activeEntities)entity.update();
+    }
+    lateUpdateCurrentScene() {
+        for (const entity of this.CurrentScene.activeEntities)entity.lateUpdate();
+    }
+    fixedUpdateActiveScene() {
+        for (const entity of this.CurrentScene.activeEntities)entity.fixedUpdate();
+    }
+    beforeRenderCurrentScene() {
+        for (const entity of this.CurrentScene.activeEntities)entity.beforeRender();
+    }
+    measureDeltaTime() {
+        let now = performance.now();
+        this.FrameCount += 1;
+        this.DeltaTime = now - this.LastFrameTimeStamp;
+        this.LastFrameTimeStamp = now;
+    }
+    measureAverageFPS() {
+        this.FrameCountInOneSecond += 1;
+        this.AccumulatedTimeInOneSecond += this.DeltaTime;
+        if (this.AccumulatedTimeInOneSecond >= 1000) {
+            this.AccumulatedTimeInOneSecond -= 1000;
+            this.FrameRate = this.FrameCountInOneSecond;
+            this.FrameCountInOneSecond = 0;
+        }
+    }
+}
+
+},{"./input":"c9Xk6","./renderer":"lxmET","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"lxmET":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Renderer", ()=>Renderer
+);
+var _three = require("three");
+class Renderer {
+    constructor(canvasWidth, canvasHeight){
+        this.Renderer = new _three.WebGLRenderer();
+        this.Renderer.setSize(canvasWidth, canvasHeight);
+        document.body.appendChild(this.Renderer.domElement);
+    }
+    render(scene) {
+        if (scene === undefined) return;
+        this.Renderer.render(scene.renderScene, scene.mainCamera.implementation);
+    }
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"3QJAW":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Scene", ()=>Scene
@@ -30964,7 +30996,7 @@ class Scene {
     }
 }
 
-},{"./camera":"hnBv0","three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW","./meshRenderer":"4uxNV"}],"hnBv0":[function(require,module,exports) {
+},{"./camera":"hnBv0","./meshRenderer":"4uxNV","three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"hnBv0":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Camera", ()=>Camera
@@ -30976,6 +31008,10 @@ var _three = require("three");
 class Camera extends _component.Component {
     get implementation() {
         return this.Implementation;
+    }
+    onBeforeRender() {
+        this.Implementation.position.set(this.transform.position.x, this.transform.position.y, this.transform.position.z);
+        this.Implementation.rotation.set(this.transform.eulerAngles.x, this.transform.eulerAngles.y, this.transform.eulerAngles.z);
     }
 }
 class PerspectiveCamera extends Camera {
@@ -30991,10 +31027,21 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Component", ()=>Component
 );
 class Component {
+    get hasOwner() {
+        return this.Owner !== undefined;
+    }
+    get transform() {
+        return this.Owner.transform;
+    }
+    setOwnerEntity(onwer) {
+        if (onwer === undefined) return;
+        this.Owner = onwer;
+    }
     onStart() {}
     onUpdate() {}
     onLateUpdate() {}
     onFixedUpdate() {}
+    onBeforeRender() {}
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"4uxNV":[function(require,module,exports) {
@@ -31004,6 +31051,11 @@ parcelHelpers.export(exports, "MeshRenderer", ()=>MeshRenderer
 );
 var _component = require("./component");
 class MeshRenderer extends _component.Component {
+    onBeforeRender() {
+        this.mesh.scale.set(this.transform.scale.x, this.transform.scale.y, this.transform.scale.z);
+        this.mesh.position.set(this.transform.position.x, this.transform.position.y, this.transform.position.z);
+        this.mesh.rotation.set(this.transform.eulerAngles.x, this.transform.eulerAngles.y, this.transform.eulerAngles.z);
+    }
 }
 
 },{"./component":"1zIHr","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"14jp3":[function(require,module,exports) {
@@ -31011,10 +31063,13 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Entity", ()=>Entity
 );
-var _three = require("three");
+var _transform = require("./transform");
 class Entity {
-    Position = new _three.Vector3(0, 0, 0);
+    Transform = new _transform.Transform();
     Components = [];
+    get transform() {
+        return this.Transform;
+    }
     start() {
         for (const component of this.Components)component.onStart();
     }
@@ -31027,8 +31082,14 @@ class Entity {
     fixedUpdate() {
         for (const component of this.Components)component.onFixedUpdate();
     }
+    beforeRender() {
+        for (const component of this.Components)component.onBeforeRender();
+    }
     addComponent(component) {
-        if (!this.Components.includes(component)) this.Components.push(component);
+        if (component.hasOwner) return;
+        if (this.Components.includes(component)) return;
+        this.Components.push(component);
+        component.setOwnerEntity(this);
     }
     removeComponent(component) {
         let index = this.Components.indexOf(component);
@@ -31043,6 +31104,47 @@ class Entity {
     }
 }
 
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}]},["2o0CO","jeorp"], "jeorp", "parcelRequireddde")
+},{"./transform":"5RmYs","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"5RmYs":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Transform", ()=>Transform
+);
+var _three = require("three");
+class Transform {
+    Scale = new _three.Vector3(1, 1, 1);
+    Position = new _three.Vector3(0, 0, 0);
+    EulerAngles = new _three.Euler(0, 0, 0);
+    Rotation = new _three.Quaternion(0, 0, 0, 1);
+    get scale() {
+        return this.Scale;
+    }
+    get position() {
+        return this.Position;
+    }
+    get rotation() {
+        return this.Rotation;
+    }
+    get eulerAngles() {
+        return this.EulerAngles;
+    }
+    set position(value) {
+        this.Position = value;
+    }
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"aXNIG":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Motor", ()=>Motor
+);
+var _component = require("./engine/component");
+class Motor extends _component.Component {
+    onUpdate() {
+        this.transform.eulerAngles.x += 0.01;
+        this.transform.eulerAngles.y += 0.01;
+    }
+}
+
+},{"./engine/component":"1zIHr","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}]},["2o0CO","jeorp"], "jeorp", "parcelRequireddde")
 
 //# sourceMappingURL=index.b7a05eb9.js.map

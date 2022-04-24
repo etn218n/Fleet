@@ -13,7 +13,7 @@ class Renderer {
     public render(scene : Scene) {
         if (scene === undefined)
             return;
-        
+            
         this.Renderer.render(scene.renderScene, scene.mainCamera.implementation);
     }
 }
