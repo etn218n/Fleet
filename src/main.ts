@@ -8,10 +8,8 @@ const camera = new Nol.Entity();
 const cube   = new Nol.Entity();
 const motor  = new Motor();
 
-const meshRenderer    = new Nol.MeshRenderer();
-meshRenderer.geometry = new Three.BoxGeometry();
-meshRenderer.material = new Three.MeshBasicMaterial({ color: 0x00ff00 });
-meshRenderer.mesh     = new Three.Mesh(meshRenderer.geometry, meshRenderer.material);
+const meshRenderer = new Nol.MeshRenderer();
+meshRenderer.mesh  = new Three.Mesh(new Three.BoxGeometry(), new Three.MeshBasicMaterial({ color: 0x00ff00 }));
 
 cube.addComponent(meshRenderer);
 cube.addComponent(motor);

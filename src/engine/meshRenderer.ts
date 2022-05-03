@@ -1,25 +1,30 @@
+import { Mesh } from "three";
 import { Component } from "./component";
-import { Mesh as ThreeMesh, 
-         Material as ThreeMaterial,
-         BufferGeometry as ThreeGeometry } from "three";
 
 class MeshRenderer extends Component {
-    public mesh:ThreeMesh;
-    public material:ThreeMaterial;
-    public geometry:ThreeGeometry;
+    private Mesh:Mesh;
+
+    set mesh(value : Mesh) {
+        this.Mesh = value;
+        this.Mesh.matrixAutoUpdate = false;
+    }
+
+    get mesh() { return this.Mesh; }
 
     public onBeforeRender() {
-        this.mesh.scale.set(this.transform.scale.x,
+        this.Mesh.scale.set(this.transform.scale.x,
                             this.transform.scale.y,
                             this.transform.scale.z);
 
-        this.mesh.position.set(this.transform.position.x, 
+        this.Mesh.position.set(this.transform.position.x, 
                                this.transform.position.y, 
                                this.transform.position.z);
 
-        this.mesh.rotation.set(this.transform.eulerAngles.x, 
+        this.Mesh.rotation.set(this.transform.eulerAngles.x, 
                                this.transform.eulerAngles.y, 
                                this.transform.eulerAngles.z);
+
+        this.mesh.updateMatrixWorld();
     }
 }
 

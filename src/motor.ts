@@ -1,10 +1,11 @@
-import { Vector3 } from "three";
 import { Component } from "./engine/component";
 
 class Motor extends Component {
+    private n:number = 0;
+
     public onUpdate() {
-        this.transform.eulerAngles.x += 0.01;
-        this.transform.eulerAngles.y += 0.01;
+        this.n += 0.01;
+        this.transform.rotateAroundX(this.n);
     }
 }
 

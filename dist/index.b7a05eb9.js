@@ -523,11 +523,9 @@ const camera = new _nol.Entity();
 const cube = new _nol.Entity();
 const motor = new _motor.Motor();
 const meshRenderer = new _nol.MeshRenderer();
-meshRenderer.geometry = new _three.BoxGeometry();
-meshRenderer.material = new _three.MeshBasicMaterial({
+meshRenderer.mesh = new _three.Mesh(new _three.BoxGeometry(), new _three.MeshBasicMaterial({
     color: 65280
-});
-meshRenderer.mesh = new _three.Mesh(meshRenderer.geometry, meshRenderer.material);
+}));
 cube.addComponent(meshRenderer);
 cube.addComponent(motor);
 camera.addComponent(new _nol.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000));
@@ -31051,10 +31049,18 @@ parcelHelpers.export(exports, "MeshRenderer", ()=>MeshRenderer
 );
 var _component = require("./component");
 class MeshRenderer extends _component.Component {
+    set mesh(value) {
+        this.Mesh = value;
+        this.Mesh.matrixAutoUpdate = false;
+    }
+    get mesh() {
+        return this.Mesh;
+    }
     onBeforeRender() {
-        this.mesh.scale.set(this.transform.scale.x, this.transform.scale.y, this.transform.scale.z);
-        this.mesh.position.set(this.transform.position.x, this.transform.position.y, this.transform.position.z);
-        this.mesh.rotation.set(this.transform.eulerAngles.x, this.transform.eulerAngles.y, this.transform.eulerAngles.z);
+        this.Mesh.scale.set(this.transform.scale.x, this.transform.scale.y, this.transform.scale.z);
+        this.Mesh.position.set(this.transform.position.x, this.transform.position.y, this.transform.position.z);
+        this.Mesh.rotation.set(this.transform.eulerAngles.x, this.transform.eulerAngles.y, this.transform.eulerAngles.z);
+        this.mesh.updateMatrixWorld();
     }
 }
 
@@ -31109,39 +31115,52 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Transform", ()=>Transform
 );
+var _component = require("./component");
 var _three = require("three");
-class Transform {
+class Transform extends _component.Component {
     Scale = new _three.Vector3(1, 1, 1);
     Position = new _three.Vector3(0, 0, 0);
     EulerAngles = new _three.Euler(0, 0, 0);
     Rotation = new _three.Quaternion(0, 0, 0, 1);
+    LocalMatrix = new _three.Matrix4();
+    WorldMaxtrix = new _three.Matrix4();
+    constructor(){
+        super();
+        this.WorldMaxtrix.setPosition(0, 0, 0);
+        this.WorldMaxtrix.makeScale(1, 1, 1);
+        this.WorldMaxtrix.makeRotationFromQuaternion(new _three.Quaternion(0, 0, 0, 1));
+    }
     get scale() {
-        return this.Scale;
+        return this.Scale.setFromMatrixScale(this.WorldMaxtrix);
     }
     get position() {
-        return this.Position;
+        return this.Position.setFromMatrixPosition(this.WorldMaxtrix);
     }
     get rotation() {
-        return this.Rotation;
+        return this.Rotation.setFromRotationMatrix(this.WorldMaxtrix);
     }
     get eulerAngles() {
-        return this.EulerAngles;
+        return this.EulerAngles.setFromRotationMatrix(this.WorldMaxtrix);
     }
     set position(value) {
-        this.Position = value;
+        this.WorldMaxtrix.setPosition(value.x, value.y, value.z);
+    }
+    rotateAroundX(thetaRadian) {
+        this.WorldMaxtrix.makeRotationX(thetaRadian);
     }
 }
 
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW"}],"aXNIG":[function(require,module,exports) {
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"5a0mW","./component":"1zIHr"}],"aXNIG":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Motor", ()=>Motor
 );
 var _component = require("./engine/component");
 class Motor extends _component.Component {
+    n = 0;
     onUpdate() {
-        this.transform.eulerAngles.x += 0.01;
-        this.transform.eulerAngles.y += 0.01;
+        this.n += 0.01;
+        this.transform.rotateAroundX(this.n);
     }
 }
 
